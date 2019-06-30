@@ -1,0 +1,35 @@
+ValidationMonitor (Deprecated)
+In tensorflow, we can use a ValidationMonitor with tf.contrib.learn to not only monitor the progress of training, but to also stop the training when certain conditions are met.
+
+The following example from the ValidationMonitor documentation shows how to set it up. Note that the last three parameters indicate which metric we're optimizing.
+
+validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(
+  test_set.data,
+  test_set.target,
+  every_n_steps=50,
+  metrics=validation_metrics,
+  early_stopping_metric="loss",
+  early_stopping_metric_minimize=True,
+  early_stopping_rounds=200)
+The last parameter indicates to ValidationMonitor that it should stop the training process if the loss did not decrease in 200 steps (rounds) of training.
+
+The validation_monitor is then passed to tf.contrib.learn's "fit" method which runs the training process:
+
+classifier = tf.contrib.learn.DNNClassifier(
+  feature_columns=feature_columns,
+  hidden_units=[10, 20, 10],
+  n_classes=3,
+  model_dir="/tmp/iris_model",
+  config=tf.contrib.learn.RunConfig(save_checkpoints_secs=1))
+
+classifier.fit(x=training_set.data,
+           y=training_set.target,
+           steps=2000,
+           monitors=[validation_monitor])
+SessionRunHook
+More recent versions of TensorFlow deprecated monitors in favor of SessionRunHooks. SessionRunHooks are an evolving part of tf.train, and going forward appear to be the proper place where you'd implement early stopping.
+
+At the time of writing, two pre-defined stopping monitors exist as a part of tf.train's training hooks:
+
+StopAtStepHook: A monitor to request the training stop after a certain number of steps
+NanTensorHook: a monitor that monitor's loss and stops training if it encounters a NaN loss
